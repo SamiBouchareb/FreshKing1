@@ -1,0 +1,343 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  @media (min-width: 768px) {
+    /* Base styles */
+    html, body {
+      cursor: none !important;
+    }
+
+    /* Remove default cursor from all clickable elements */
+    a, 
+    button,
+    [role="button"],
+    select,
+    input[type="submit"],
+    input[type="reset"],
+    input[type="button"],
+    .clickable,
+    [onclick] {
+      cursor: none !important;
+    }
+
+    /* Custom cursor styles */
+    .cursor-dot,
+    .custom-cursor {
+      display: block !important;
+      pointer-events: none;
+      position: fixed;
+      z-index: 9999;
+      will-change: transform;
+      transition: transform 0.15s ease-out;
+    }
+
+    .cursor-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #4CAF50;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .custom-cursor {
+      width: 40px;
+      height: 40px;
+      background-color: rgba(76, 175, 80, 0.2);
+      border: 2px solid rgba(76, 175, 80, 0.5);
+      border-radius: 50%;
+      backdrop-filter: blur(2px);
+      transform: translate(-50%, -50%);
+      transition: transform 0.15s ease-out, width 0.2s ease-out, height 0.2s ease-out;
+    }
+  }
+
+  /* Hide cursor on mobile */
+  .cursor-dot,
+  .custom-cursor {
+    display: none;
+  }
+
+  /* Cart animation styles */
+  .cart-item-clone {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transition: all 0.6s cubic-bezier(0.2, 0.6, 0.2, 1.5);
+    transform-origin: center center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Hover effects */
+  a:hover ~ .custom-cursor,
+  button:hover ~ .custom-cursor,
+  [role="button"]:hover ~ .custom-cursor {
+    width: 50px;
+    height: 50px;
+    background-color: rgba(76, 175, 80, 0.3);
+  }
+
+  /* Animations */
+  @keyframes trailFade {
+    from {
+      opacity: 0.5;
+      transform: translate(-50%, -50%) scale(0.8);
+    }
+    to {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.2);
+    }
+  }
+
+  @keyframes addToCartFloat {
+    0% {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(0.6) rotate(5deg) translateY(-20px);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(0.3) rotate(0deg) translateY(0);
+      opacity: 0;
+    }
+  }
+
+  /* Cart bump animation */
+  @keyframes cartBump {
+    0% {
+      transform: scale(1);
+    }
+    25% {
+      transform: scale(1.2);
+    }
+    50% {
+      transform: scale(0.95);
+    }
+    75% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .cart-bump {
+    animation: cartBump 0.3s ease-in-out;
+  }
+
+  /* Infinite Scroll Animation */
+  .scroll-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scroll-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Mission Section Animations */
+@keyframes slow-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes slow-spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-slow-spin {
+  animation: slow-spin 25s linear infinite;
+}
+
+.animate-slow-spin-reverse {
+  animation: slow-spin-reverse 30s linear infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Enhanced hover effects */
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #22c55e 0%, #059669 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Card animations */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Background blur effects */
+.blur-backdrop {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Enhanced dish card animations */
+.dish-card {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  cursor: none;
+}
+
+.dish-card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(
+    45deg,
+    rgba(34, 197, 94, 0),
+    rgba(34, 197, 94, 0.3),
+    rgba(34, 197, 94, 0)
+  );
+  border-radius: 1rem;
+  z-index: -1;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  filter: blur(8px);
+}
+
+.dish-card::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(
+    45deg,
+    rgba(34, 197, 94, 0.2),
+    rgba(34, 197, 94, 0.1),
+    rgba(34, 197, 94, 0.2)
+  );
+  border-radius: 1rem;
+  z-index: -1;
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dish-card:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+
+.dish-card:hover::before {
+  opacity: 1;
+  filter: blur(12px);
+}
+
+.dish-card:hover::after {
+  opacity: 1;
+}
+
+/* Enhanced image hover effect */
+.dish-image {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dish-card:hover .dish-image {
+  transform: scale(1.1);
+}
+
+/* Button hover effects */
+.cart-button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  cursor: none;
+}
+
+.cart-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(
+    circle,
+    rgba(34, 197, 94, 0.4) 0%,
+    transparent 50%
+  );
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cart-button:hover::before {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Quantity controls hover effect */
+.quantity-button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: none;
+}
+
+.quantity-button:hover:not(:disabled) {
+  background-color: rgb(34, 197, 94, 0.1);
+  border-color: rgb(34, 197, 94);
+  color: rgb(34, 197, 94);
+}
+
+/* Hide scrollbar */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Infinite Scroll Animation */
+@keyframes infinite-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-infinite-scroll {
+  animation: infinite-scroll 120s linear infinite;
+  min-width: fit-content;
+}
+
+.animate-infinite-scroll:hover {
+  animation-play-state: paused;
+}
