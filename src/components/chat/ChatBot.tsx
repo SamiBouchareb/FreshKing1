@@ -367,33 +367,29 @@ Always be friendly, professional, and knowledgeable. For investment inquiries, d
       .replace(/\n###/g, '\n\n###');
   };
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
-
-    const userMessage: Message = {
+  const sendMessage = async (userMessage: string) => {
+    const userMessageObj: Message = {
       role: 'user',
-      content: input,
+      content: userMessage,
       timestamp: new Date()
     };
 
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
+    setMessages(prevMessages => [...prevMessages, userMessageObj]);
     setIsLoading(true);
-    setIsScrolledToBottom(true);
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${CHATBOT_API_KEY}`,
+          'Authorization': `Bearer ${CHATBOT_API_KEY}`
         },
         body: JSON.stringify({
           model: 'gpt-4',
           messages: [
             systemMessage,
             ...messages.map(({ role, content }) => ({ role, content })),
-            { role: userMessage.role, content: userMessage.content }
+            { role: userMessageObj.role, content: userMessageObj.content }
           ],
           temperature: 0.7,
           max_tokens: 500,
@@ -450,6 +446,14 @@ Always be friendly, professional, and knowledgeable. For investment inquiries, d
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+
+    await sendMessage(input);
+    setInput('');
+    setIsScrolledToBottom(true);
   };
 
   const chatWindowClasses = isExpanded
