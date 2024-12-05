@@ -12,6 +12,7 @@ interface CheckoutFormData {
   address: string;
   city: string;
   zipCode: string;
+  paymentMethod: 'card' | 'paypal';
   cardNumber: string;
   expiryDate: string;
   cvv: string;
@@ -111,6 +112,7 @@ export function Checkout() {
     address: '',
     city: '',
     zipCode: '',
+    paymentMethod: 'card',
     cardNumber: '',
     expiryDate: '',
     cvv: ''
@@ -318,45 +320,151 @@ export function Checkout() {
 
             <Step
               title="Payment Information"
-              description="Enter your payment details"
+              description="Choose your payment method"
               icon={<CreditCard className="w-6 h-6" />}
               isActive={currentStep === 3}
               isCompleted={currentStep > 3}
               onStepClick={() => setCurrentStep(3)}
             >
-              <div className="space-y-4">
-                <InputField
-                  label="Card Number"
-                  name="cardNumber"
-                  type="text"
-                  value={formData.cardNumber}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="1234 5678 9012 3456"
-                  icon={<CreditCard className="w-4 h-4" />}
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  <InputField
-                    label="Expiry Date"
-                    name="expiryDate"
-                    type="text"
-                    value={formData.expiryDate}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="MM/YY"
-                    icon={<CreditCard className="w-4 h-4" />}
-                  />
-                  <InputField
-                    label="CVV"
-                    name="cvv"
-                    type="text"
-                    value={formData.cvv}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="123"
-                    icon={<Lock className="w-4 h-4" />}
-                  />
+              <div className="space-y-6">
+                {/* Payment Method Selection */}
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-gray-700">Payment Method</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <motion.button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'card' }))}
+                      className={`relative p-4 border-2 rounded-xl flex flex-col items-center gap-2 transition-all ${
+                        formData.paymentMethod === 'card' 
+                          ? 'border-green-500 bg-green-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <CreditCard className={`w-6 h-6 ${
+                        formData.paymentMethod === 'card' ? 'text-green-500' : 'text-gray-400'
+                      }`} />
+                      <span className={`text-sm font-medium ${
+                        formData.paymentMethod === 'card' ? 'text-green-700' : 'text-gray-700'
+                      }`}>
+                        Credit Card
+                      </span>
+                      {formData.paymentMethod === 'card' && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center"
+                        >
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        </motion.div>
+                      )}
+                    </motion.button>
+
+                    <motion.button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'paypal' }))}
+                      className={`relative p-4 border-2 rounded-xl flex flex-col items-center gap-2 transition-all ${
+                        formData.paymentMethod === 'paypal' 
+                          ? 'border-[#0070BA] bg-[#0070BA]/5' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="w-16 h-6 relative">
+                        <img 
+                          src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png"
+                          alt="PayPal"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <span className={`text-sm font-medium ${
+                        formData.paymentMethod === 'paypal' ? 'text-[#0070BA]' : 'text-gray-700'
+                      }`}>
+                        PayPal
+                      </span>
+                      {formData.paymentMethod === 'paypal' && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute -top-2 -right-2 w-6 h-6 bg-[#0070BA] rounded-full flex items-center justify-center"
+                        >
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        </motion.div>
+                      )}
+                    </motion.button>
+                  </div>
                 </div>
+
+                {/* Credit Card Form */}
+                {formData.paymentMethod === 'card' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="space-y-4"
+                  >
+                    <InputField
+                      label="Card Number"
+                      name="cardNumber"
+                      type="text"
+                      value={formData.cardNumber}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="1234 5678 9012 3456"
+                      icon={<CreditCard className="w-4 h-4" />}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <InputField
+                        label="Expiry Date"
+                        name="expiryDate"
+                        type="text"
+                        value={formData.expiryDate}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="MM/YY"
+                        icon={<CreditCard className="w-4 h-4" />}
+                      />
+                      <InputField
+                        label="CVV"
+                        name="cvv"
+                        type="text"
+                        value={formData.cvv}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="123"
+                        icon={<Lock className="w-4 h-4" />}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* PayPal Section */}
+                {formData.paymentMethod === 'paypal' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="space-y-4"
+                  >
+                    <div className="bg-[#0070BA]/5 rounded-xl p-6 text-center">
+                      <img 
+                        src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-150px.png"
+                        alt="PayPal"
+                        className="h-8 mx-auto mb-4"
+                      />
+                      <p className="text-gray-600 mb-4">
+                        You will be redirected to PayPal to complete your payment securely.
+                      </p>
+                      <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                        <Lock className="w-4 h-4" />
+                        <span>Secure PayPal checkout</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
                 <Button
                   onClick={handleSubmit}
                   disabled={isProcessing}
@@ -370,7 +478,7 @@ export function Checkout() {
                   ) : (
                     <>
                       <Lock className="w-4 h-4" />
-                      Complete Order
+                      {formData.paymentMethod === 'paypal' ? 'Continue to PayPal' : 'Complete Order'}
                     </>
                   )}
                 </Button>

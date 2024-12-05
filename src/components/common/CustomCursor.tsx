@@ -22,6 +22,18 @@ export const CustomCursor: React.FC = () => {
   const animateCursor = useCallback((time: number) => {
     if (previousTimeRef.current !== undefined) {
       const mousemoveEvent = (e: MouseEvent) => {
+        // Check if the mouse is over an iframe
+        const target = e.target as HTMLElement;
+        if (target.tagName.toLowerCase() === 'iframe') {
+          if (cursorDotRef.current) cursorDotRef.current.style.opacity = '0';
+          if (cursorRef.current) cursorRef.current.style.opacity = '0';
+          return;
+        }
+
+        // Show cursor when not over iframe
+        if (cursorDotRef.current) cursorDotRef.current.style.opacity = '1';
+        if (cursorRef.current) cursorRef.current.style.opacity = '1';
+
         if (cursorDotRef.current && cursorRef.current) {
           const x = e.clientX;
           const y = e.clientY;

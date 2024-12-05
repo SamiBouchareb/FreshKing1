@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { MapPin, ArrowRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { MapPin, ArrowRight, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
 
 interface LocationsProps {
   id: string;
@@ -23,7 +24,8 @@ const locations = [
     description: "Our flagship store in Hamburg's modern harbor district, featuring waterfront views and outdoor seating.",
     hours: OPENING_HOURS,
     image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2047&auto=format&fit=crop",
-    highlight: "Waterfront Views"
+    highlight: "Waterfront Views",
+    color: "#22c55e"
   },
   {
     id: 2,
@@ -35,7 +37,8 @@ const locations = [
     description: "Located in Hamburg's vibrant cultural quarter, our Sternschanze location embraces the neighborhood's creative spirit.",
     hours: OPENING_HOURS,
     image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=2074&auto=format&fit=crop",
-    highlight: "Creative District"
+    highlight: "Creative District",
+    color: "#3b82f6"
   },
   {
     id: 3,
@@ -47,7 +50,8 @@ const locations = [
     description: "Nestled in the elegant Eppendorf quarter, offering a refined dining experience in a sophisticated setting.",
     hours: OPENING_HOURS,
     image: "https://images.unsplash.com/photo-1564759298141-cef86f51d4d4?q=80&w=2070&auto=format&fit=crop",
-    highlight: "Elegant Quarter"
+    highlight: "Elegant Quarter",
+    color: "#ec4899"
   },
   {
     id: 4,
@@ -59,7 +63,8 @@ const locations = [
     description: "A cozy spot in the heart of Winterhude, perfect for both quick bites and leisurely meals.",
     hours: OPENING_HOURS,
     image: "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?q=80&w=1974&auto=format&fit=crop",
-    highlight: "Neighborhood Gem"
+    highlight: "Neighborhood Gem",
+    color: "#f59e0b"
   },
   {
     id: 5,
@@ -71,136 +76,329 @@ const locations = [
     description: "Our latest addition in trendy Ottensen, combining modern design with the area's historic charm.",
     hours: OPENING_HOURS,
     image: "https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?q=80&w=2070&auto=format&fit=crop",
-    highlight: "Trendy Location"
+    highlight: "Trendy Location",
+    color: "#8b5cf6"
   }
 ];
 
-export function Locations({ id }: LocationsProps) {
-  const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
-  const [hoveredLocation, setHoveredLocation] = useState<number | null>(null);
+const DreamParticle = ({ color }: { color: string }) => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  
+  useEffect(() => {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = Math.random() * 100;
+    const duration = 3 + Math.random() * 2;
+    
+    const updatePosition = () => {
+      const newX = Math.cos(angle) * radius;
+      const newY = Math.sin(angle) * radius;
+      x.set(newX);
+      y.set(newY);
+    };
+
+    updatePosition();
+    const interval = setInterval(() => {
+      updatePosition();
+    }, duration * 1000);
+
+    return () => clearInterval(interval);
+  }, [x, y]);
 
   return (
-    <section id={id} className="relative py-32 overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(#22c55e15_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black,transparent)]" />
+    <motion.div
+      style={{ 
+        x, 
+        y,
+        backgroundColor: color 
+      }}
+      className="absolute w-1 h-1 rounded-full"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: [0, 1, 0] }}
+      transition={{ duration: 3, repeat: Infinity }}
+    />
+  );
+};
+
+const LocationCard = ({ location }: { location: any }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  const cardRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: cardRef,
+    offset: ["start end", "end start"]
+  });
+
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.8, 1, 0.8]);
+  const y = useTransform(scrollYProgress, [0, 0.5, 1], [100, 0, -100]);
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
+
+  const springConfig = { stiffness: 100, damping: 30, mass: 1 };
+  const scaleSpring = useSpring(scale, springConfig);
+  const ySpring = useSpring(y, springConfig);
+  const opacitySpring = useSpring(opacity, springConfig);
+
+  return (
+    <motion.div
+      ref={cardRef}
+      style={{
+        scale: scaleSpring,
+        y: ySpring,
+        opacity: opacitySpring
+      }}
+      className="relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={() => setIsExpanded(!isExpanded)}
+    >
+      <motion.div
+        className="relative bg-white/10 backdrop-blur-lg rounded-3xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-700"
+        animate={{
+          boxShadow: isHovered 
+            ? `0 20px 40px ${location.color}33, 0 0 100px ${location.color}22`
+            : "0 10px 30px rgba(0,0,0,0.1)"
+        }}
+      >
+        {/* Dreamweaver Particles */}
+        {isHovered && Array.from({ length: 10 }).map((_, i) => (
+          <DreamParticle key={i} color={location.color} />
+        ))}
+
+        {/* Location Image with Morphing Overlay */}
+        <div className="relative h-80 overflow-hidden">
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-b"
+            style={{
+              background: `linear-gradient(45deg, ${location.color}66, transparent)`
+            }}
+            animate={{
+              opacity: isHovered ? 0.8 : 0.4,
+              scale: isHovered ? 1.1 : 1
+            }}
+            transition={{ duration: 0.7 }}
+          />
+          <motion.img
+            src={location.image}
+            alt={location.name}
+            className="w-full h-full object-cover"
+            animate={{
+              scale: isHovered ? 1.1 : 1,
+              filter: isHovered ? "saturate(1.2)" : "saturate(1)"
+            }}
+            transition={{ duration: 0.7 }}
+          />
+          
+          {/* Floating Badge */}
+          <motion.div
+            className="absolute top-6 right-6 backdrop-blur-md bg-white/20 px-4 py-2 rounded-full"
+            animate={{
+              y: isHovered ? -5 : 0,
+              scale: isHovered ? 1.1 : 1
+            }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" style={{ color: location.color }} />
+              <span className="text-white font-medium">{location.highlight}</span>
+            </div>
+          </motion.div>
+
+          {/* Location Info */}
+          <motion.div
+            className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 via-black/50 to-transparent"
+            animate={{
+              y: isHovered ? 0 : 10,
+              opacity: isHovered ? 1 : 0.8
+            }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.h3
+              className="text-3xl font-bold text-white mb-2"
+              animate={{
+                y: isHovered ? 0 : 10,
+                scale: isHovered ? 1.1 : 1
+              }}
+            >
+              {location.name}
+            </motion.h3>
+            <motion.p
+              className="text-white/90 text-lg"
+              animate={{
+                y: isHovered ? 0 : 10,
+                opacity: isHovered ? 1 : 0.7
+              }}
+            >
+              {location.area}
+            </motion.p>
+          </motion.div>
+        </div>
+
+        {/* Expanded Content */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="border-t border-white/10"
+            >
+              <div className="p-8 space-y-6">
+                <motion.p
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-gray-600 leading-relaxed text-lg"
+                >
+                  {location.description}
+                </motion.p>
+                
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex items-start gap-4"
+                >
+                  <MapPin className="w-6 h-6 mt-1 flex-shrink-0" style={{ color: location.color }} />
+                  <div>
+                    <p className="text-gray-700 font-medium">{location.address}</p>
+                    <p className="text-gray-500">{location.postal}</p>
+                  </div>
+                </motion.div>
+
+                <motion.button
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="group w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-gradient-to-r"
+                  style={{
+                    backgroundImage: `linear-gradient(to right, ${location.color}22, ${location.color}11)`
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <span style={{ color: location.color }} className="font-medium">View Details</span>
+                  <ArrowRight
+                    className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1"
+                    style={{ color: location.color }}
+                  />
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+export function Locations({ id }: LocationsProps) {
+  const [ref, inView] = useInView({
+    threshold: 0.1,
+    triggerOnce: true
+  });
+
+  return (
+    <section id={id} className="relative py-32 min-h-screen flex items-center" ref={ref}>
+      {/* Dreamweaver Background */}
+      <motion.div
+        className="absolute inset-0 overflow-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: inView ? 1 : 0 }}
+        transition={{ duration: 1 }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.05)_0%,rgba(34,197,94,0)_50%)] animate-pulse" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(34,197,94,0.03)_1px,transparent_1px)] bg-[size:100px_100px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(34,197,94,0.03)_1px,transparent_1px)] bg-[size:100px_100px]" />
+      </motion.div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Section Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, ease: "easeOut" }}
           className="text-center mb-20"
         >
-          <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-green-600 to-green-400 bg-clip-text text-transparent">
-            Our Locations
-          </h2>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            Find your nearest FreshKing restaurant in Hamburg. Each location offers the same 
-            exceptional quality and service in uniquely designed spaces.
-          </p>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={inView ? { scale: 1, opacity: 1 } : {}}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="inline-block"
+          >
+            <h2 className="text-6xl font-bold mb-6 bg-gradient-to-r from-green-600 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+              Discover Our Locations
+            </h2>
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-gray-600 text-xl max-w-3xl mx-auto leading-relaxed"
+          >
+            Each FreshKing location is uniquely designed to blend with its neighborhood while
+            maintaining our commitment to exceptional quality and service.
+          </motion.p>
         </motion.div>
 
-        {/* Opening Hours Banner */}
+        {/* Opening Hours - Floating Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-16 bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-green-100"
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="mb-20"
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-            <div className="text-center md:text-left">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Weekdays</h3>
-              <p className="text-gray-600">{OPENING_HOURS.weekdays}</p>
+          <motion.div
+            className="relative bg-white/30 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20"
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 via-blue-500/10 to-purple-500/10 rounded-3xl" />
+            <div className="relative grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+              {Object.entries(OPENING_HOURS).map(([day, hours]) => (
+                <motion.div
+                  key={day}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={inView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.5, delay: 0.8 }}
+                  className="text-center md:border-x border-gray-200/20"
+                >
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2 capitalize">
+                    {day}
+                  </h3>
+                  <p className="text-gray-600 text-lg">{hours}</p>
+                </motion.div>
+              ))}
             </div>
-            <div className="text-center border-t md:border-t-0 md:border-l md:border-r border-green-100 py-4 md:py-0 px-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Saturday</h3>
-              <p className="text-gray-600">{OPENING_HOURS.saturday}</p>
-            </div>
-            <div className="text-center md:text-right border-t md:border-t-0 pt-4 md:pt-0">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Sunday</h3>
-              <p className="text-gray-600">{OPENING_HOURS.sunday}</p>
-            </div>
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* Locations Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {locations.map((location, index) => (
-            <motion.div
-              key={location.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              onMouseEnter={() => setHoveredLocation(location.id)}
-              onMouseLeave={() => setHoveredLocation(null)}
-              onClick={() => setSelectedLocation(selectedLocation === location.id ? null : location.id)}
-              className="group cursor-pointer"
-            >
-              <div className="relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1">
-                {/* Location Image */}
-                <div className="relative h-64 overflow-hidden">
-                  <div className="absolute inset-0 bg-black/20 z-10" />
-                  <img
-                    src={location.image}
-                    alt={location.name}
-                    className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"
-                  />
-                  {/* Highlight Badge */}
-                  <div className="absolute top-4 right-4 z-20 bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-full">
-                    <p className="text-sm font-medium text-green-600">{location.highlight}</p>
-                  </div>
-                  {/* Location Name Overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 via-black/50 to-transparent z-20">
-                    <h3 className="text-2xl font-bold text-white mb-1">{location.name}</h3>
-                    <p className="text-white/90">{location.area}</p>
-                  </div>
-                </div>
-
-                {/* Expandable Content */}
-                <AnimatePresence>
-                  {selectedLocation === location.id && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="border-t border-green-100"
-                    >
-                      <div className="p-6 space-y-4">
-                        <p className="text-gray-600 leading-relaxed">
-                          {location.description}
-                        </p>
-                        
-                        {/* Address */}
-                        <div className="flex items-start gap-3 text-gray-600">
-                          <MapPin className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                          <div>
-                            <p>{location.address}</p>
-                            <p>{location.postal}</p>
-                          </div>
-                        </div>
-
-                        {/* View More Button */}
-                        <button className="w-full mt-4 group/button flex items-center justify-center gap-2 text-green-600 font-medium hover:text-green-700 transition-colors">
-                          View Details
-                          <ArrowRight className="w-4 h-4 transform transition-transform group-hover/button:translate-x-1" />
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Hover Indicator */}
-                <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-600 to-green-400 transform origin-left transition-transform duration-500 ${hoveredLocation === location.id ? 'scale-x-100' : 'scale-x-0'}`} />
-              </div>
-            </motion.div>
+          {locations.map(location => (
+            <LocationCard key={location.id} location={location} />
           ))}
         </div>
+
+        {/* Survey Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, delay: 0.8 }}
+          className="mt-20"
+        >
+          <div className="relative bg-white/10 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 via-blue-500/5 to-purple-500/5" />
+            <iframe 
+              className="w-full h-[600px] rounded-xl relative z-10"
+              frameBorder="0"
+              id="iframeX6D3A1V8A8F1F9Y6J"
+              src="https://www.survio.com/survey/i/R3B9F9M0F3O7S4F7D"
+            />
+          </div>
+        </motion.div>
       </div>
     </section>
   );
-};
+}

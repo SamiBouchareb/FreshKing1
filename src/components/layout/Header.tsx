@@ -30,7 +30,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-3 group cursor-pointer" onClick={() => scrollToSection('home')}>
+          <div className="flex items-center space-x-3 group cursor-pointer" onClick={() => navigate('/')}>
             <div className="bg-green-100 p-2.5 rounded-full group-hover:bg-green-200 transition-all duration-300 transform group-hover:scale-105">
               <Leaf className="w-8 h-8 text-green-600 group-hover:text-green-700" />
             </div>
