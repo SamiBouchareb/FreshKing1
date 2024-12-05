@@ -4,6 +4,7 @@ import { useCart } from '../../context/CartContext';
 import { Button } from '../ui/Button';
 import { CreditCard, Lock, ChevronRight, CheckCircle, MapPin, Mail, User } from 'lucide-react';
 import ReactConfetti from 'react-confetti';
+import NutritionAnalysis from '../analysis/NutritionAnalysis';
 
 interface CheckoutFormData {
   firstName: string;
@@ -524,6 +525,7 @@ export function Checkout() {
                 </div>
               </div>
             </motion.div>
+            <NutritionAnalysis />
           </div>
         </div>
       </div>

@@ -12,6 +12,7 @@ import { Checkout } from './components/checkout/Checkout';
 import { RewardsPage } from './pages/RewardsPage';
 import { AuthProvider } from './context/AuthContext';
 import { InvestorPage } from './pages/InvestorPage';
+import ChatBot from './components/chat/ChatBot';
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
                 </Routes>
               </main>
               <Footer />
+              <ChatBot />
             </div>
           </CartProvider>
         </AuthProvider>

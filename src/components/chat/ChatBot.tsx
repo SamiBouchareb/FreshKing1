@@ -7,6 +7,7 @@ import { useCart } from '../../context/CartContext';
 import { menuItems } from '../../data/menuItems';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { CHATBOT_API_KEY } from '../../config';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -381,16 +382,11 @@ Always be friendly, professional, and knowledgeable. For investment inquiries, d
     setIsScrolledToBottom(true);
 
     try {
-      const apiKey = import.meta.env.VITE_CHATBOT_API_KEY;
-      if (!apiKey) {
-        throw new Error('API key is not set in environment variables');
-      }
-
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${CHATBOT_API_KEY}`,
         },
         body: JSON.stringify({
           model: 'gpt-4',
