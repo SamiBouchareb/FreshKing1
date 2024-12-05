@@ -7,7 +7,7 @@ import { useCart } from '../../context/CartContext';
 import { menuItems } from '../../data/menuItems';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { CHATBOT_API_KEY } from '../../config.ts';
+import { CHATBOT_API_KEY } from '../../config';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
