@@ -7,7 +7,7 @@ import { useCart } from '../../context/CartContext';
 import { menuItems } from '../../data/menuItems';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { CHATBOT_API_KEY } from '../../config';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -367,82 +367,60 @@ Always be friendly, professional, and knowledgeable. For investment inquiries, d
       .replace(/\n###/g, '\n\n###');
   };
 
-  const sendMessage = async (userMessage: string) => {
-    const userMessageObj: Message = {
-      role: 'user',
-      content: userMessage,
-      timestamp: new Date()
-    };
-
-    setMessages(prevMessages => [...prevMessages, userMessageObj]);
-    setIsLoading(true);
-
+  const sendMessage = async (messageContent: string) => {
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${CHATBOT_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-4',
-          messages: [
-            systemMessage,
-            ...messages.map(({ role, content }) => ({ role, content })),
-            { role: userMessageObj.role, content: userMessageObj.content }
-          ],
-          temperature: 0.7,
-          max_tokens: 500,
-        }),
-      });
+      const apiKey = 'AIzaSyBC_gTcx1nbjeTTDUd80DxVuDek6ShPeV8';
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('OpenAI API Error:', errorData);
-        
-        if (response.status === 429) {
-          throw new Error('> **Rate Limit Reached**\n\nPlease wait a moment before sending another message. Our AI is taking a short break! 🌟');
-        }
-        
-        throw new Error(errorData.error?.message || 'Failed to get response from OpenAI');
-      }
+      setMessages(prevMessages => [
+        ...prevMessages,
+        { role: 'user', content: messageContent, timestamp: new Date() }
+      ]);
+      setInput('');
+      setIsLoading(true);
 
-      const data = await response.json();
+      // Initialize chat with system message
+      const initialPrompt = "You are FreshBot, the AI assistant for FreshKing, a premium healthy food restaurant chain. You help customers with menu items, nutritional information, and general inquiries. Always be friendly and helpful.";
       
-      if (!data.choices || !data.choices[0]) {
-        throw new Error('Invalid response format from OpenAI');
+      try {
+        const result = await model.generateContent([
+          { text: initialPrompt + "\n\nUser: " + messageContent }
+        ]);
+        
+        const response = await result.response;
+        const responseText = response.text();
+
+        setMessages(prevMessages => [
+          ...prevMessages,
+          { role: 'assistant', content: responseText, timestamp: new Date() }
+        ]);
+      } catch (genError) {
+        console.error('Generation error:', genError);
+        throw genError;
       }
 
-      const assistantMessage = data.choices[0].message.content;
-      
-      if (assistantMessage.includes("[NAVIGATE:")) {
-        const route = assistantMessage.match(/\[NAVIGATE:(.*?)\]/)?.[1];
-        if (route) {
-          navigate(route);
-        }
-      }
-
-      if (assistantMessage.includes("[ADD_TO_CART:")) {
-        const itemId = assistantMessage.match(/\[ADD_TO_CART:(.*?)\]/)?.[1];
-        if (itemId) {
-          handleAddToCart(itemId);
-        }
-      }
-
-      const finalMessage: Message = {
-        role: 'assistant',
-        content: formatAssistantMessage(assistantMessage.replace(/\[NAVIGATE:.*?\]|\[ADD_TO_CART:.*?\]/g, '')),
-        timestamp: new Date()
-      };
-
-      setMessages((prev) => [...prev, finalMessage]);
     } catch (error) {
-      console.error('Error:', error);
-      setMessages((prev) => [...prev, {
-        role: 'assistant',
-        content: error instanceof Error ? error.message : '> **Oops!** Something went wrong. Please try again in a moment.',
-        timestamp: new Date()
-      }]);
+      console.error('Error details:', error);
+      let errorMessage = "I apologize, but I'm having trouble processing your request.";
+      
+      if (error instanceof Error) {
+        console.log('Error message:', error.message);
+        if (error.message.includes('API key')) {
+          errorMessage = "API key configuration issue. Please check your environment setup.";
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+
+      setMessages(prevMessages => [
+        ...prevMessages,
+        { 
+          role: 'assistant', 
+          content: errorMessage,
+          timestamp: new Date() 
+        }
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -452,8 +430,6 @@ Always be friendly, professional, and knowledgeable. For investment inquiries, d
     if (!input.trim()) return;
 
     await sendMessage(input);
-    setInput('');
-    setIsScrolledToBottom(true);
   };
 
   const chatWindowClasses = isExpanded
