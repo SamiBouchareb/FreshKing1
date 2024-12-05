@@ -367,11 +367,76 @@ Always be friendly, professional, and knowledgeable. For investment inquiries, d
       .replace(/\n###/g, '\n\n###');
   };
 
+  const formatResponse = (text: string) => {
+    // Format headers
+    text = text.replace(/# (.*)/g, '## 🎯 $1 ##\n');
+    text = text.replace(/## (.*) ##/g, '\n\n**$1**\n');
+
+    // Format sections
+    text = text.replace(/Section: (.*)/g, '\n\n### 📍 $1 ###\n');
+    
+    // Format lists with emojis
+    text = text.replace(/- (Benefits|Advantages|Pros):/g, '\n\n✨ **$1:**');
+    text = text.replace(/- (Features|Highlights):/g, '\n\n🌟 **$1:**');
+    text = text.replace(/- (Price|Cost|Investment):/g, '\n\n💰 **$1:**');
+    text = text.replace(/- (Nutrition|Health):/g, '\n\n🥗 **$1:**');
+    text = text.replace(/- (Note|Important):/g, '\n\n⚠️ **$1:**');
+    
+    // Format bullet points with different emojis
+    const bulletPoints = [
+      { regex: /• (.*sustainability.*)/gi, emoji: '🌱' },
+      { regex: /• (.*healthy.*|.*nutrition.*)/gi, emoji: '🥗' },
+      { regex: /• (.*investment.*|.*profit.*)/gi, emoji: '📈' },
+      { regex: /• (.*technology.*|.*digital.*)/gi, emoji: '💻' },
+      { regex: /• (.*menu.*|.*food.*)/gi, emoji: '🍽️' },
+      { regex: /• (.*delivery.*|.*order.*)/gi, emoji: '🚚' },
+      { regex: /• (.*price.*|.*cost.*)/gi, emoji: '💰' },
+      { regex: /• (.*quality.*)/gi, emoji: '⭐' },
+      { regex: /• (.*time.*|.*hours.*)/gi, emoji: '⏰' },
+      { regex: /•/g, emoji: '▪️' } // Default bullet point
+    ];
+
+    bulletPoints.forEach(({ regex, emoji }) => {
+      text = text.replace(regex, `${emoji}`);
+    });
+
+    // Format call-to-actions
+    text = text.replace(/CTA: (.*)/g, '\n\n🎯 **$1**\n');
+
+    // Format tips and recommendations
+    text = text.replace(/Tip: (.*)/g, '\n\n💡 **Pro Tip:** $1\n');
+    text = text.replace(/Recommendation: (.*)/g, '\n\n🌟 **Recommended:** $1\n');
+
+    // Format prices and numbers
+    text = text.replace(/€(\d+)/g, '**€$1**');
+    text = text.replace(/(\d+)%/g, '**$1%**');
+
+    // Format key metrics
+    text = text.replace(/Metric: (.*): (.*)/g, '\n📊 **$1:** $2\n');
+
+    // Format contact information
+    text = text.replace(/Email: (.*)/g, '\n📧 $1\n');
+    text = text.replace(/Phone: (.*)/g, '\n📞 $1\n');
+
+    // Format dividers for sections
+    text = text.replace(/---/g, '\n\n─────────────────────────\n\n');
+
+    return text;
+  };
+
   const sendMessage = async (messageContent: string) => {
     try {
       const apiKey = 'AIzaSyBC_gTcx1nbjeTTDUd80DxVuDek6ShPeV8';
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-pro",
+        generationConfig: {
+          temperature: 0.9,
+          topP: 1,
+          topK: 1,
+          maxOutputTokens: 2048,
+        },
+      });
 
       setMessages(prevMessages => [
         ...prevMessages,
@@ -380,16 +445,135 @@ Always be friendly, professional, and knowledgeable. For investment inquiries, d
       setInput('');
       setIsLoading(true);
 
-      // Initialize chat with system message
-      const initialPrompt = "You are FreshBot, the AI assistant for FreshKing, a premium healthy food restaurant chain. You help customers with menu items, nutritional information, and general inquiries. Always be friendly and helpful.";
-      
+      // Enhanced system prompt with detailed context
+      const initialPrompt = `You are FreshBot, the friendly and knowledgeable AI assistant for FreshKing. Your responses should be well-structured and visually appealing. Follow these formatting guidelines:
+
+1. Response Structure:
+   • Always start with a warm greeting and acknowledgment of the query
+   • Organize information into clear sections using "Section:" prefix
+   • Use bullet points for lists (start with •)
+   • End with a relevant call-to-action using "CTA:" prefix
+
+2. Visual Elements:
+   • Use appropriate section headers with "# Header #" format
+   • Separate major sections with "---" dividers
+   • Format prices with € symbol
+   • Include "Tip:" for helpful suggestions
+   • Use "Metric:" for key statistics
+
+3. Content Guidelines:
+   • Keep paragraphs short and focused
+   • Use bullet points for features and benefits
+   • Include relevant metrics and statistics
+   • Add recommendations when appropriate
+   • End with next steps or suggestions
+
+Key Information:
+
+# Company Overview #
+Section: Mission & Vision
+• Mission: Revolutionizing healthy eating through premium, accessible nutrition
+• Vision: Becoming Europe's leading healthy food chain by 2026
+
+Section: Core Values
+• Health-first approach
+• Sustainability commitment
+• Innovation in food service
+• Premium quality standards
+• Customer-centric service
+
+---
+
+# Business Model #
+Section: Market Opportunity
+• €15 billion health food market in Germany
+• Growing health consciousness trend
+• Digital transformation in food service
+• Expanding urban professional demographic
+
+Section: Revenue Streams
+• Dine-in service
+• Takeout & delivery
+• Corporate catering
+• Meal prep subscriptions
+• Health food retail
+
+---
+
+# Menu Offerings #
+Section: Categories
+• Fresh Salads & Bowls
+• Power Protein Plates
+• Healthy Wraps & Sandwiches
+• Fresh-Pressed Juices
+• Protein Smoothies
+• Healthy Desserts
+
+Section: Special Features
+• Customizable portions
+• Dietary options (Vegan, Keto, etc.)
+• Nutritional transparency
+• Seasonal ingredients
+• Local sourcing
+
+---
+
+# Investment Opportunity #
+Section: Current Round
+• Series A funding
+• €5 million target
+• 25% projected annual ROI
+• Clear exit strategy
+
+Section: Growth Strategy
+• 50 locations by 2025
+• German market focus
+• International expansion 2026
+• Technology platform development
+• Brand scaling
+
+---
+
+# Technology Platform #
+Section: Features
+• Mobile ordering system
+• AI-powered inventory
+• Smart analytics
+• Customer loyalty program
+• Digital kitchen management
+
+---
+
+# Sustainability #
+Section: Initiatives
+• 100% recyclable packaging
+• Local ingredient sourcing
+• Zero food waste program
+• Carbon footprint tracking
+• Community engagement
+
+Current User Query: ${messageContent}
+
+Remember to:
+1. Structure your response clearly
+2. Use appropriate formatting
+3. Include relevant emojis
+4. Add visual dividers between sections
+5. End with a clear call-to-action
+6. Keep the tone matching the query (professional for investors, friendly for customers)
+
+Please provide a well-structured, visually appealing response:`;
+
       try {
         const result = await model.generateContent([
-          { text: initialPrompt + "\n\nUser: " + messageContent }
+          { text: initialPrompt }
         ]);
         
         const response = await result.response;
-        const responseText = response.text();
+        let responseText = response.text();
+
+        // Apply formatting
+        responseText = formatResponse(responseText);
 
         setMessages(prevMessages => [
           ...prevMessages,
